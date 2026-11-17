@@ -7,28 +7,30 @@ units, abbreviations, chat shorthand and English loanwords. It does not measure 
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="assets/results-dark.svg">
-  <img src="assets/results-light.svg" alt="Character error rate per engine on raw and hand-normalized Indonesian text">
+  <img src="assets/results-light.svg" alt="Character error rate per engine on raw, zyphra-textnorm and hand-normalized Indonesian text">
 </picture>
 
 ## Findings so far
 
 Four engines, 28 sentences. Character error rate, lower is better.
 
-| Engine | License | Speed on M2 | Raw text | Hand-normalized text |
-|---|---|---|---|---|
-| [ZONOS3-Mini](https://huggingface.co/Zyphra/ZONOS3-Mini) | Apache-2.0 | 6x real time | 1.8% | 0.6% |
-| [Piper `id_ID-news_tts-medium`](https://huggingface.co/rhasspy/piper-voices/tree/main/id/id_ID) | MIT | 40x real time | 7.4% | 0.8% |
-| [Supertonic-3](https://huggingface.co/Supertone/supertonic-3) | OpenRAIL-M | 4x real time | 8.2% | 0.5% |
-| [OmniVoice](https://huggingface.co/k2-fsa/OmniVoice) | CC-BY-NC (weights) | 0.3x real time | 14.8% | 0.3% |
+| Engine | License | Speed on M2 | Raw text | After zyphra-textnorm | Hand-normalized text |
+|---|---|---|---|---|---|
+| [ZONOS3-Mini](https://huggingface.co/Zyphra/ZONOS3-Mini) | Apache-2.0 | 4x real time | 1.8% | 0.9% | 0.6% |
+| [Piper `id_ID-news_tts-medium`](https://huggingface.co/rhasspy/piper-voices/tree/main/id/id_ID) | MIT | 40x real time | 7.4% | 1.1% | 0.8% |
+| [Supertonic-3](https://huggingface.co/Supertone/supertonic-3) | OpenRAIL-M | 4x real time | 8.2% | 0.8% | 0.5% |
+| [OmniVoice](https://huggingface.co/k2-fsa/OmniVoice) | CC-BY-NC (weights) | 0.3x real time | 14.8% | 0.8% | 0.3% |
 
 - **All four speak plain Indonesian clearly.** Once the text is written out in words, every engine is below 1%.
 - **The differences come from text normalization, not from the voice.** On raw text, Piper, Supertonic-3
   and OmniVoice misread 7 to 15% of characters. Piper spells `Rp` as "er pe" and reads `/` as "garis miring";
   Supertonic-3 and OmniVoice garble large numbers and dates.
-- **ZONOS3-Mini is the exception because it ships a normalizer.** Its server runs
-  [zyphra-textnorm](https://github.com/Zyphra/zyphra-textnorm), which has Indonesian rules for money, time,
-  units and abbreviations.
-- **Nobody handles chat shorthand.** `Yg penting dtg dulu` is not read as "yang penting datang dulu" by any engine.
+- **An existing open-source normalizer closes almost all of the gap.** Passing the text through
+  [zyphra-textnorm](https://github.com/Zyphra/zyphra-textnorm) (MIT, `pip install zyphra-textnorm`) first brings
+  every engine to about 1%. It has Indonesian rules for money, dates, times, units and common abbreviations.
+  ZONOS3-Mini does well on raw text because its server already runs this normalizer.
+- **What is still misread after normalization:** letter-by-letter acronyms (`KTP`, `BRI`) and chat shorthand
+  (`dtg` for "datang"). No engine and no normalizer tested here handles those.
 
 Per-category tables are in [RESULTS.md](RESULTS.md). These are early numbers: see [Limitations](#limitations).
 
@@ -45,11 +47,12 @@ and normalized, with the error rate and what the speech recognizer heard.
    - `text`: as written, e.g. `Harganya Rp15.000 per porsi.`
    - `normalized`: written out by hand as a perfect normalizer would, e.g. `Harganya lima belas ribu rupiah per porsi.`
    - `spoken`: the correct reading, used as the answer key.
-2. `synth` runs `text` (the **raw** variant) and `normalized` (the **normalized** variant) through each engine.
+2. `synth` runs each sentence through each engine in three variants: **raw** (`text` as written), **textnorm**
+   (`text` after zyphra-textnorm) and **normalized** (the hand-written form).
 3. `score` transcribes every clip back to text with two speech recognizers and compares it with `spoken`.
 
-The gap between the raw and normalized columns shows how much of an engine's error comes from unnormalized
-text rather than from its speech.
+The gap between raw and normalized shows how much of an engine's error comes from unnormalized text rather than
+from its speech. The textnorm column shows how much of that gap an existing normalizer already closes.
 
 Categories: `plain`, `number`, `currency`, `datetime`, `unit`, `abbrev`, `homograph`, `codeswitch`, `long`, `informal`.
 
@@ -72,7 +75,7 @@ Requires [uv](https://docs.astral.sh/uv/) and ffmpeg. Models are downloaded on f
 ```sh
 uv sync
 uv run python -m tts_id_bench.synth          # all engines, or name the ones you want
-uv run python -m tts_id_bench.score          # writes out/results.json and RESULTS.md
+uv run python -m tts_id_bench.score          # writes out/results.json and RESULTS.md; only new clips are transcribed
 uv run python -m tts_id_bench.chart          # writes assets/results-*.svg
 uv run python -m tts_id_bench.samples        # writes docs/ (the samples page)
 ```
@@ -101,7 +104,8 @@ Subclass `Engine` in `src/tts_id_bench/engines.py`, implement `load()` and `synt
   so that category has to be judged by ear.
 - **Voice-cloning engines share one synthetic reference.** OmniVoice and ZONOS3-Mini have no Indonesian preset
   voice, so both clone a clip synthesized by Piper. A different reference may give different results.
-- **Speed is measured on one machine**, and each engine uses its own runtime (ONNX, MPS, MLX).
+- **Speed is measured on one machine**, and each engine uses its own runtime (ONNX, MPS, MLX). The figures
+  vary from run to run with how busy the laptop is.
 
 ## License
 
