@@ -2,9 +2,14 @@
 
 Usage: uv run python -m tts_id_bench.synth [engine ...]
 
-Each sentence is synthesized twice: "raw" (text as written) and "normalized"
-(hand-written spoken form, i.e. what a perfect text normalizer would produce).
+Each sentence is synthesized in three variants:
+
+- raw: the text as written
+- textnorm: the text passed through zyphra-textnorm, an existing open-source normalizer
+- normalized: the hand-written spoken form, i.e. what a perfect normalizer would produce
+
 Writes out/<engine>/<variant>/<sentence-id>.wav and out/<engine>/synth.json (timings).
+Clips that already exist are kept; delete out/<engine> to synthesize them again.
 """
 
 from __future__ import annotations
@@ -15,13 +20,18 @@ import time
 from pathlib import Path
 
 import soundfile as sf
+import zyphra_textnorm
 
 from .engines import ENGINES
 
 ROOT = Path(__file__).resolve().parents[2]
 SENTENCES = ROOT / "data" / "sentences.json"
 OUT = ROOT / "out"
-VARIANTS = {"raw": "text", "normalized": "normalized"}
+VARIANTS = {
+    "raw": lambda s: s["text"],
+    "textnorm": lambda s: zyphra_textnorm.normalize(s["text"], "id"),
+    "normalized": lambda s: s["normalized"],
+}
 
 
 def run(engine_name: str) -> None:
@@ -32,19 +42,25 @@ def run(engine_name: str) -> None:
     engine.load()
     load_s = time.perf_counter() - t0
 
+    summary_path = OUT / engine_name / "synth.json"
+    previous = json.loads(summary_path.read_text())["sentences"] if summary_path.exists() else []
     rows = []
     try:
-        for variant, field in VARIANTS.items():
+        for variant, text_of in VARIANTS.items():
             out_dir = OUT / engine_name / variant
             out_dir.mkdir(parents=True, exist_ok=True)
             for s in sentences:
                 path = out_dir / f"{s['id']}.wav"
-                if variant == "normalized" and s[field] == s["text"]:
-                    # Nothing to normalize: reuse the raw audio instead of synthesizing it again.
+                text = text_of(s)
+                if path.exists():
+                    rows += [r for r in previous if (r["id"], r["variant"]) == (s["id"], variant)]
+                    continue
+                if variant != "raw" and text == s["text"]:
+                    # The variant leaves this sentence unchanged: reuse the raw audio.
                     path.write_bytes((OUT / engine_name / "raw" / path.name).read_bytes())
                     continue
                 t0 = time.perf_counter()
-                engine.synthesize(s[field], path)
+                engine.synthesize(text, path)
                 synth_s = time.perf_counter() - t0
                 audio_s = sf.info(str(path)).duration
                 rows.append({"id": s["id"], "variant": variant, "synth_s": round(synth_s, 3), "audio_s": round(audio_s, 3)})
@@ -64,7 +80,7 @@ def run(engine_name: str) -> None:
         "rtf": round(sum(r["synth_s"] for r in timed) / sum(r["audio_s"] for r in timed), 3),
         "sentences": rows,
     }
-    (OUT / engine_name / "synth.json").write_text(json.dumps(summary, indent=2))
+    summary_path.write_text(json.dumps(summary, indent=2))
     print(f"{engine_name}: RTF {summary['rtf']}, load {summary['load_s']}s", flush=True)
 
 
