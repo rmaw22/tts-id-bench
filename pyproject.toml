@@ -1,7 +1,8 @@
 [project]
 name = "tts-id-bench"
 version = "0.1.0"
-description = "Add your description here"
+description = "Benchmark of open-weight text-to-speech models on Indonesian"
+license = "MIT"
 readme = "README.md"
 authors = [
     { name = "Rizky Milan Alpasya Wijaksono", email = "35473345+rmaw22@users.noreply.github.com" }
