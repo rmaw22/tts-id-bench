@@ -18,10 +18,10 @@ RESULTS = ROOT / "out" / "results.json"
 ASSETS = ROOT / "assets"
 
 THEMES = {
-    "light": {"surface": "#fcfcfb", "ink": "#0b0b0b", "muted": "#52514e", "grid": "#e1e0d9", "raw": "#2a78d6", "normalized": "#eb6834"},
-    "dark": {"surface": "#1a1a19", "ink": "#f0efec", "muted": "#c3c2b7", "grid": "#2c2c2a", "raw": "#3987e5", "normalized": "#d95926"},
+    "light": {"surface": "#fcfcfb", "ink": "#0b0b0b", "muted": "#52514e", "grid": "#e1e0d9", "raw": "#2a78d6", "textnorm": "#1baf7a", "normalized": "#eb6834"},
+    "dark": {"surface": "#1a1a19", "ink": "#f0efec", "muted": "#c3c2b7", "grid": "#2c2c2a", "raw": "#3987e5", "textnorm": "#199e70", "normalized": "#d95926"},
 }
-LABELS = {"raw": "Raw text", "normalized": "Hand-normalized text"}
+LABELS = {"raw": "Raw text", "textnorm": "After zyphra-textnorm", "normalized": "Hand-normalized text"}
 
 WIDTH, LEFT, RIGHT, TOP = 760, 170, 60, 86
 BAR, GAP, GROUP_GAP = 14, 2, 22
@@ -46,7 +46,7 @@ def render(scores: list[tuple[str, dict[str, float]]], theme: dict[str, str]) ->
 
     out = [
         f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {WIDTH} {height}" width="{WIDTH}" height="{height}" role="img" '
-        f'aria-label="Character error rate per engine on raw and hand-normalized Indonesian text">',
+        f'aria-label="Character error rate per engine on raw, zyphra-textnorm and hand-normalized Indonesian text">',
         f'<rect width="{WIDTH}" height="{height}" fill="{theme["surface"]}"/>',
         f'<text x="20" y="30" {FONT} font-size="16" font-weight="600" fill="{theme["ink"]}">'
         "Character error rate on Indonesian text, by engine</text>",
