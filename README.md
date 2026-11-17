@@ -112,21 +112,18 @@ apart: see [Limitations](#limitations).
 
 ## Listen
 
-Six sentences per engine, raw and hand-normalized, are in [`docs/samples/`](docs/samples) as MP3. A few to
-start with:
+**[Audio samples page](https://rmaw22.github.io/tts-id-bench/)**: six sentences read by each engine, raw and
+hand-normalized, each with its error rate and what the recognizer heard. A few clips to start with:
 
 | Sentence | Engine | Raw | Hand-normalized |
 |---|---|---|---|
-| `Total tagihan Anda Rp2.350.000, jatuh tempo besok.` | Piper | [clip](docs/samples/piper-id-news-medium/raw/currency-02.mp3) | [clip](docs/samples/piper-id-news-medium/normalized/currency-02.mp3) |
-| | ZONOS3-Mini | [clip](docs/samples/zonos3-mini/raw/currency-02.mp3) | [clip](docs/samples/zonos3-mini/normalized/currency-02.mp3) |
-| `Batas pendaftaran 5/12/2026.` | Supertonic-3 | [clip](docs/samples/supertonic-3/raw/datetime-02.mp3) | [clip](docs/samples/supertonic-3/normalized/datetime-02.mp3) |
-| | OmniVoice | [clip](docs/samples/omnivoice/raw/datetime-02.mp3) | [clip](docs/samples/omnivoice/normalized/datetime-02.mp3) |
-| `Yg penting dtg dulu aja, sisanya gampang.` | Piper | [clip](docs/samples/piper-id-news-medium/raw/informal-02.mp3) | [clip](docs/samples/piper-id-news-medium/normalized/informal-02.mp3) |
+| `Total tagihan Anda Rp2.350.000, jatuh tempo besok.` | Piper | [clip](https://rmaw22.github.io/tts-id-bench/samples/piper-id-news-medium/raw/currency-02.mp3) | [clip](https://rmaw22.github.io/tts-id-bench/samples/piper-id-news-medium/normalized/currency-02.mp3) |
+| | ZONOS3-Mini | [clip](https://rmaw22.github.io/tts-id-bench/samples/zonos3-mini/raw/currency-02.mp3) | [clip](https://rmaw22.github.io/tts-id-bench/samples/zonos3-mini/normalized/currency-02.mp3) |
+| `Batas pendaftaran 5/12/2026.` | Supertonic-3 | [clip](https://rmaw22.github.io/tts-id-bench/samples/supertonic-3/raw/datetime-02.mp3) | [clip](https://rmaw22.github.io/tts-id-bench/samples/supertonic-3/normalized/datetime-02.mp3) |
+| | OmniVoice | [clip](https://rmaw22.github.io/tts-id-bench/samples/omnivoice/raw/datetime-02.mp3) | [clip](https://rmaw22.github.io/tts-id-bench/samples/omnivoice/normalized/datetime-02.mp3) |
+| `Yg penting dtg dulu aja, sisanya gampang.` | Piper | [clip](https://rmaw22.github.io/tts-id-bench/samples/piper-id-news-medium/raw/informal-02.mp3) | [clip](https://rmaw22.github.io/tts-id-bench/samples/piper-id-news-medium/normalized/informal-02.mp3) |
 
-`docs/index.html` is a listening page with all of them side by side, each with its error rate and what the
-recognizer heard. Open it in a browser after cloning.
-
-![Audio samples page](assets/samples-page.png)
+[![Audio samples page](assets/samples-page.png)](https://rmaw22.github.io/tts-id-bench/)
 
 ## Engines
 
