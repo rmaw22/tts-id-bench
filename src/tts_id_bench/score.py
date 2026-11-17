@@ -92,7 +92,17 @@ class Judges:
 
 def main() -> None:
     sentences = json.loads(SENTENCES.read_text())
-    judges = Judges()
+    results_path = OUT / "results.json"
+
+    # Transcribing is the slow part, so transcripts of clips older than the last results are reused.
+    # Error rates are always recomputed, so edits to the answer key take effect without re-listening.
+    cached, cached_at = {}, 0.0
+    if results_path.exists():
+        cached_at = results_path.stat().st_mtime
+        for r in json.loads(results_path.read_text()):
+            for x in r["sentences"]:
+                cached[r["engine"], x["variant"], x["id"]] = x["heard"]
+    judges = None
 
     results = []
     for engine_dir in sorted(p for p in OUT.iterdir() if (p / "synth.json").exists()):
@@ -101,7 +111,11 @@ def main() -> None:
         for variant in VARIANTS:
             for s in sentences:
                 expected = normalize(s["spoken"])
-                heard = judges.hear(load_16k(engine_dir / variant / f"{s['id']}.wav"))
+                clip = engine_dir / variant / f"{s['id']}.wav"
+                heard = cached.get((synth["engine"], variant, s["id"]))
+                if heard is None or clip.stat().st_mtime > cached_at:
+                    judges = judges or Judges()
+                    heard = judges.hear(load_16k(clip))
                 errors = {judge: round(cer(expected, text), 3) for judge, text in heard.items()}
                 rows.append(
                     {
@@ -117,7 +131,7 @@ def main() -> None:
                 print(f"{synth['engine']} {variant} {s['id']}: CER {rows[-1]['cer']}", flush=True)
         results.append({**{k: synth[k] for k in ("engine", "license", "url", "voice", "rtf")}, "sentences": rows})
 
-    (OUT / "results.json").write_text(json.dumps(results, indent=2, ensure_ascii=False))
+    results_path.write_text(json.dumps(results, indent=2, ensure_ascii=False))
     (ROOT / "RESULTS.md").write_text(render(results))
 
 
@@ -133,22 +147,24 @@ def render(results: list[dict]) -> str:
     def pick(r: dict, variant: str, category: str | None = None) -> list[dict]:
         return [x for x in r["sentences"] if x["variant"] == variant and category in (None, x["category"])]
 
+    ranked = sorted(results, key=lambda r: mean_cer(pick(r, "raw")))
     lines = [
         "# Results",
         "",
         f"Judges: faster-whisper `{WHISPER_MODEL}` and `{LITERAL_MODEL}` (no language model).",
         "Figures are character error rates in percent, lower is better. See README for how to read them.",
         "",
-        "## Overall: raw text versus hand-normalized text",
+        "Variants: `raw` is the text as written, `textnorm` is the text after zyphra-textnorm,",
+        "`normalized` is the hand-written spoken form.",
         "",
-        "| Engine | License | Voice | RTF | Raw | Normalized |",
-        "|---|---|---|---|---|---|",
+        "## Overall",
+        "",
+        "| Engine | License | Voice | RTF | " + " | ".join(VARIANTS) + " |",
+        "|---|---|---|---|" + "---|" * len(VARIANTS),
     ]
-    for r in sorted(results, key=lambda r: mean_cer(pick(r, "raw"))):
-        raw, norm = mean_cer(pick(r, "raw")), mean_cer(pick(r, "normalized"))
-        lines.append(
-            f"| [{r['engine']}]({r['url']}) | {r['license']} | {r['voice']} | {r['rtf']} | {raw:.1%} | {norm:.1%} |"
-        )
+    for r in ranked:
+        cells = " | ".join(f"{mean_cer(pick(r, v)):.1%}" for v in VARIANTS)
+        lines.append(f"| [{r['engine']}]({r['url']}) | {r['license']} | {r['voice']} | {r['rtf']} | {cells} |")
     for variant in VARIANTS:
         lines += [
             "",
@@ -157,7 +173,7 @@ def render(results: list[dict]) -> str:
             "| Engine | " + " | ".join(categories) + " |",
             "|---|" + "---|" * len(categories),
         ]
-        for r in sorted(results, key=lambda r: mean_cer(pick(r, "raw"))):
+        for r in ranked:
             cells = " | ".join(f"{mean_cer(pick(r, variant, c)):.1%}" for c in categories)
             lines.append(f"| {r['engine']} | {cells} |")
     return "\n".join(lines).replace("%", "") + "\n"
