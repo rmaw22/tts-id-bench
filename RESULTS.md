@@ -11,7 +11,7 @@ Variants: `raw` is the text as written, `textnorm` is the text after zyphra-text
 | Engine | License | Voice | RTF | raw | textnorm | normalized |
 |---|---|---|---|---|---|---|
 | [zonos3-mini](https://huggingface.co/Zyphra/ZONOS3-Mini) | Apache-2.0 | cloned from Piper reference clip | 0.272 | 1.8 | 0.9 | 0.6 |
-| [piper-id-news-medium](https://huggingface.co/rhasspy/piper-voices/tree/main/id/id_ID) | MIT (voice dataset provenance unclear) | id_ID-news_tts-medium | 0.025 | 7.4 | 1.1 | 0.8 |
+| [piper-id-news-medium](https://huggingface.co/rhasspy/piper-voices/tree/main/id/id_ID) | MIT voice, GPL-3.0 runtime (voice dataset provenance unclear) | id_ID-news_tts-medium | 0.025 | 7.4 | 1.1 | 0.8 |
 | [supertonic-3](https://huggingface.co/Supertone/supertonic-3) | OpenRAIL-M | preset F1 | 0.23 | 8.2 | 0.8 | 0.5 |
 | [omnivoice](https://huggingface.co/k2-fsa/OmniVoice) | CC-BY-NC (weights) | cloned from Piper reference clip | 3.115 | 14.8 | 0.8 | 0.3 |
 

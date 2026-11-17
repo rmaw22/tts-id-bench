@@ -41,7 +41,7 @@ class Engine:
 
 class PiperId(Engine):
     name = "piper-id-news-medium"
-    license = "MIT (voice dataset provenance unclear)"
+    license = "MIT voice, GPL-3.0 runtime (voice dataset provenance unclear)"
     url = "https://huggingface.co/rhasspy/piper-voices/tree/main/id/id_ID"
     voice = "id_ID-news_tts-medium"
 
